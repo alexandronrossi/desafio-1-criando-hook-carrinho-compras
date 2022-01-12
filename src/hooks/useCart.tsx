@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../services/api';
 import { Product } from '../types';
@@ -32,6 +32,22 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     return [];
   });
 
+
+  const prevCartRef = useRef<Product[]>();
+
+  useEffect(() => {
+    prevCartRef.current = cart;
+  });
+
+  const cartPreviousValue = prevCartRef.current ?? cart;
+
+  useEffect(() => {
+    if (cart !== cartPreviousValue) {
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(cart));
+    }
+  }, [cart, cartPreviousValue]);
+
+
   const addProduct = async (productId: number) => {
     try {
       // validacao da existencia do produto no carrinho
@@ -57,7 +73,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         setCart(cartList);
 
         setCart(cartList);
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(cartList));
         return;
       }
 
@@ -68,7 +83,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       }
       cartList.push(newProduct);
       setCart(cartList);
-      localStorage.setItem('@RocketShoes:cart', JSON.stringify(cartList));
     } catch {
       toast.error('Erro na adição do produto');
     }
@@ -82,7 +96,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       if (productExists) {
         const cartListWithProduct = cart.filter(product => product.id !== productId);
         setCart(cartListWithProduct);
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(cartListWithProduct));
         return;
       }
       throw Error();
@@ -111,7 +124,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
       productExists.amount = amount;
       setCart(cartList);
-      localStorage.setItem('@RocketShoes:cart', JSON.stringify(cartList));
     } catch {
       toast.error('Erro na alteração de quantidade do produto');
     }
